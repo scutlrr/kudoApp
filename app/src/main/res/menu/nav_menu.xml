@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_links"
+            android:icon="@drawable/ic_link"
+            android:title="链接" />
+        <item
+            android:id="@+id/nav_docs"
+            android:icon="@drawable/ic_doc"
+            android:title="文档" />
+        <item
+            android:id="@+id/nav_chat"
+            android:icon="@drawable/ic_chat"
+            android:title="对话分析" />
+    </group>
+</menu>

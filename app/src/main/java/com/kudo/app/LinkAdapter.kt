@@ -41,7 +41,7 @@ class LinkAdapter(
             }
 
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-            tvTime.text = sdf.format(Date(item.timestamp))
+            tvTime.text = sdf.format(Date((item.timestamp * 1000).toLong()))
 
             btnCopy.setOnClickListener { onCopy(item) }
             btnOpen.setOnClickListener { onOpen(item) }
