@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KudoApp</string>
+    <string name="no_links_yet">还没有收到任何分享链接</string>
+    <string name="link_saved">链接已保存</string>
+    <string name="share_hint">在其他应用中点击分享，选择 KudoApp 即可导入链接</string>
+    <string name="total_links">共 %d 条链接</string>
+    <string name="delete">删除</string>
+    <string name="open">打开</string>
+    <string name="copy">复制</string>
+    <string name="copied">已复制到剪贴板</string>
+    <string name="clear_all">清空全部</string>
+    <string name="clear_confirm">确定要清空所有链接吗？</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+</resources>
