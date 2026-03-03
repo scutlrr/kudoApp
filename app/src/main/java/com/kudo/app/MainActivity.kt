@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupAdapters()
+        setupToolbarMenus()
         setupNavigation()
         setupTabs()
         setupChat()
@@ -44,6 +45,15 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshCurrentList()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        when {
+            binding.drawerLayout.isOpen -> binding.drawerLayout.close()
+            currentPage == "chat" -> showLinksPage()
+            else -> super.onBackPressed()
+        }
     }
 
     private fun setupAdapters() {
@@ -81,12 +91,17 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter = linkAdapter
     }
 
+    private fun setupToolbarMenus() {
+        // 主页面工具栏菜单 - 程序化加载确保overflow正常显示
+        binding.toolbar.inflateMenu(R.menu.main_menu)
+    }
+
     private fun setupNavigation() {
         // Toolbar 汉堡菜单
         binding.toolbar.setNavigationOnClickListener { binding.drawerLayout.open() }
         binding.chatToolbar.setNavigationOnClickListener { binding.drawerLayout.open() }
 
-        // 主菜单
+        // 主菜单 - 清空全部
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_clear_all -> {
@@ -97,23 +112,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 侧边栏导航
+        // 对话页面工具栏 - 选择上下文
+        binding.chatToolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_select_context -> {
+                    showContextSelectionDialog()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // 侧边栏导航 - 只保留对话分析
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             binding.drawerLayout.close()
             when (menuItem.itemId) {
-                R.id.nav_links -> {
-                    showLinksPage()
-                    binding.tabLayout.getTabAt(0)?.select()
-                }
-                R.id.nav_docs -> {
-                    showLinksPage()
-                    binding.tabLayout.getTabAt(1)?.select()
-                }
                 R.id.nav_chat -> showChatPage()
             }
             true
         }
-        binding.navigationView.setCheckedItem(R.id.nav_links)
     }
 
     private fun setupTabs() {
@@ -126,12 +143,10 @@ class MainActivity : AppCompatActivity() {
                 when (currentTab) {
                     0 -> {
                         binding.recyclerView.adapter = linkAdapter
-                        binding.navigationView.setCheckedItem(R.id.nav_links)
                         refreshLinks()
                     }
                     1 -> {
                         binding.recyclerView.adapter = docAdapter
-                        binding.navigationView.setCheckedItem(R.id.nav_docs)
                         refreshDocs()
                     }
                 }
@@ -183,6 +198,85 @@ class MainActivity : AppCompatActivity() {
         binding.linksPage.visibility = View.GONE
         binding.chatPage.visibility = View.VISIBLE
         updateSelectedInfo()
+    }
+
+    private fun showContextSelectionDialog() {
+        val options = arrayOf("选择链接", "选择文档", "清除已选上下文")
+        AlertDialog.Builder(this)
+            .setTitle("选择对话上下文")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showLinkSelectionDialog()
+                    1 -> showDocSelectionDialog()
+                    2 -> {
+                        selectedLinkIds.clear()
+                        selectedDocIds.clear()
+                        updateSelectedInfo()
+                        Snackbar.make(binding.root, "已清除所有上下文", Snackbar.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showLinkSelectionDialog() {
+        lifecycleScope.launch {
+            try {
+                val links = ApiClient.getLinks()
+                if (links.isEmpty()) {
+                    Snackbar.make(binding.root, "暂无链接", Snackbar.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val titles = links.map { it.title?.ifEmpty { it.url } ?: it.url }.toTypedArray()
+                val checked = links.map { selectedLinkIds.contains(it.id) }.toBooleanArray()
+
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("选择链接作为上下文")
+                    .setMultiChoiceItems(titles, checked) { _, index, isChecked ->
+                        val id = links[index].id
+                        if (isChecked) {
+                            if (!selectedLinkIds.contains(id)) selectedLinkIds.add(id)
+                        } else {
+                            selectedLinkIds.remove(id)
+                        }
+                    }
+                    .setPositiveButton("确定") { _, _ -> updateSelectedInfo() }
+                    .setNegativeButton("取消", null)
+                    .show()
+            } catch (e: Exception) {
+                showError(e)
+            }
+        }
+    }
+
+    private fun showDocSelectionDialog() {
+        lifecycleScope.launch {
+            try {
+                val docs = ApiClient.getDocuments()
+                if (docs.isEmpty()) {
+                    Snackbar.make(binding.root, "暂无文档", Snackbar.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val titles = docs.map { it.original_name }.toTypedArray()
+                val checked = docs.map { selectedDocIds.contains(it.id) }.toBooleanArray()
+
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("选择文档作为上下文")
+                    .setMultiChoiceItems(titles, checked) { _, index, isChecked ->
+                        val id = docs[index].id
+                        if (isChecked) {
+                            if (!selectedDocIds.contains(id)) selectedDocIds.add(id)
+                        } else {
+                            selectedDocIds.remove(id)
+                        }
+                    }
+                    .setPositiveButton("确定") { _, _ -> updateSelectedInfo() }
+                    .setNegativeButton("取消", null)
+                    .show()
+            } catch (e: Exception) {
+                showError(e)
+            }
+        }
     }
 
     private fun updateSelectedInfo() {

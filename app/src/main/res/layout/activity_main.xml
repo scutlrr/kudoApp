@@ -24,10 +24,10 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/primary"
                 android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
                 app:title="@string/app_name"
                 app:titleTextColor="@color/white"
-                app:navigationIcon="@drawable/ic_menu"
-                app:menu="@menu/main_menu" />
+                app:navigationIcon="@drawable/ic_menu" />
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
@@ -107,7 +107,8 @@
                 android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
                 app:title="对话分析"
                 app:titleTextColor="@color/white"
-                app:navigationIcon="@drawable/ic_menu" />
+                app:navigationIcon="@drawable/ic_menu"
+                app:menu="@menu/chat_menu" />
 
             <!-- 已选资料提示 -->
             <TextView
